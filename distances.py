@@ -3,6 +3,8 @@ import cv2
 import numpy as np
 import pickle
 import os
+import ot
+import scipy
 
 # Define distance and similarity functions
 def euclidean_distance(h1, h2):
@@ -30,6 +32,49 @@ def jensen_shannon_divergence(h1, h2):
     m = 0.5 * (h1 + h2)
     return 0.5 * (kl_divergence(h1, m) + kl_divergence(h2, m))
 
+
+def earth_movers_distance(h1, h2, bin_locations):
+    # h1, h2: Histograms to compare
+    # bin locations: Locations of the bins, the "values" of the bins
+
+    return scipy.stats.wasserstein_distance(bin_locations, bin_locations, h1, h2) # SCIPY IMPLEMENTATION
+
+
+def quadratic_form_distance(h1, h2,A):
+    # h1, h2: Histograms to compare
+    # A: Similarity matrix
+    diff = h1 - h2
+    return np.sqrt(diff.T @ A @ diff)
+
+def emd (a,b):
+    # https://stackoverflow.com/questions/5101004/python-code-for-earth-movers-distance
+    earth = 0
+    earth1 = 0
+    diff = 0
+    s= len(a)
+    su = []
+    diff_array = []
+    for i in range (0,s):
+        diff = a[i]-b[i]
+        diff_array.append(diff)
+        diff = 0
+    for j in range (0,s):
+        earth = (earth + diff_array[j])
+        earth1= abs(earth)
+        su.append(earth1)
+    emd_output = sum(su)/(s-1)
+    return emd_output
+
+def emd_ot(h1,h2,bin_locations):
+    # h1, h2: Histograms to compare
+    # bin locations: Locations of the bins, the "values" of the bins
+    n_bins = len(h1)
+    # Cost matrix: distance between bin i and bin j
+    cost_matrix = ot.dist(bin_locations.reshape((n_bins, 1)), bin_locations.reshape((n_bins, 1)))
+
+    ot_emd = ot.emd2(h1, h2, cost_matrix)
+
+    return ot_emd
 
 if __name__ == "__main__":
     hist1 = np.array([1]*4)
