@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from pathlib import Path
 import pickle
+import matplotlib.pyplot as plt
 
 
 class ImageDescriptor:
@@ -15,12 +16,6 @@ class ImageDescriptor:
 
     def compute_descriptor(self, image: np.ndarray):
         
-        match self.color_mapping:
-            case 'MAX_ABS_SCALE':
-                image = (image - image.min()) / (image.max() - image.min())
-            case 'STD_SCALER':
-                image = (image - image.mean()) / image.std()
-
         match self.color_space:
             case 'GRAY':
                 converted_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -49,10 +44,41 @@ class ImageDescriptor:
             case _:
                 raise ValueError(f"Sorry, we do not have this color space yet: {self.color_space}")
         
+        # Print info before normalization
+        print(f"\n=== Before normalization ===")
+        for i, ch in enumerate(channels):
+            print(f"Channel {i}: dtype={ch.dtype}, shape={ch.shape}, min={ch.min()}, max={ch.max()}, mean={ch.mean():.2f}, std={ch.std():.2f}")
+        
+        # Apply normalization after color conversion
+        match self.color_mapping:
+            case 'MAX_ABS_SCALE':
+                channels = [(ch - ch.min()) / (ch.max() - ch.min()) for ch in channels]
+                # Update also the ranges
+                ranges = [(0, 1) for _ in ranges]
+            case 'STD_SCALER':
+                channels = [(ch - ch.mean()) / ch.std() for ch in channels]
+                # Update ranges based on actual min/max after standardization
+                ranges = [(ch.min(), ch.max()) for ch in channels]
+        
+        # Print info after normalization
+        if self.color_mapping:
+            print(f"\n=== After normalization ({self.color_mapping}) ===")
+            for i, ch in enumerate(channels):
+                print(f"Channel {i}: dtype={ch.dtype}, shape={ch.shape}, min={ch.min():.4f}, max={ch.max():.4f}, mean={ch.mean():.4f}, std={ch.std():.4f}")
+        
         histograms = []
         for i, channel in enumerate(channels):
             hist = np.histogram(channel, bins=self.bins_per_channel, range=ranges[i])[0]
-            # print(hist.shape)
+            hist = hist.astype(np.float32)
+            hist /= hist.sum() + 1e-8  # Normalize histogram
+            #Plot the histogram
+            print(f"Histogram Channel {i}: shape={hist.shape}, min={hist.min()}, max={hist.max()}, mean={hist.mean():.2f}, std={hist.std():.2f}")
+            plt.figure()
+            plt.title(f"Histogram Channel {i}")
+            plt.plot(hist)
+            plt.xlabel('Bin')
+            plt.ylabel('Frequency')
+            plt.show()
             histograms.append(hist)
             
         descriptor = np.concatenate(histograms)
@@ -78,11 +104,14 @@ if __name__ == "__main__":
     
     # dataset/qsd1_w1/00003.jpg
     descr = ImageDescriptor(color_mapping='MAX_ABS_SCALE', color_space='RGB', bins_per_channel=64)
-    img = cv2.imread("dataset/qsd1_w1/00003.jpg")
+    img = cv2.imread("qsd1_w1/00003.jpg")
+    
     hist = descr.compute_descriptor(img)
+    
     print(hist.shape)
     print(hist.max())
     print(hist.min())
     print(hist.mean())
     print(hist.std())
+    print(hist.sum())
     
