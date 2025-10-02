@@ -9,10 +9,11 @@ class ImageDescriptor:
     
     ''' Class to compute descriptors using 1D histograms'''
 
-    def __init__(self, color_mapping=None, color_space='HSV', bins_per_channel = 32):
+    def __init__(self, color_mapping=None, color_space='HSV', bins_per_channel = 32, normalize_histograms=False):
         self.color_mapping = color_mapping
         self.color_space = color_space.upper() # 'RGB', 'HSV', 'LAB', 'GRAY', 'YCrCb', 'Cielab'
         self.bins_per_channel = bins_per_channel
+        self.normalize_histograms = normalize_histograms
 
     def compute_descriptor(self, image: np.ndarray):
         
@@ -45,10 +46,11 @@ class ImageDescriptor:
                 raise ValueError(f"Sorry, we do not have this color space yet: {self.color_space}")
         
         # Print info before normalization
+        """
         print(f"\n=== Before normalization ===")
         for i, ch in enumerate(channels):
             print(f"Channel {i}: dtype={ch.dtype}, shape={ch.shape}, min={ch.min()}, max={ch.max()}, mean={ch.mean():.2f}, std={ch.std():.2f}")
-        
+        """
         # Apply normalization after color conversion
         match self.color_mapping:
             case 'MAX_ABS_SCALE':
@@ -70,8 +72,10 @@ class ImageDescriptor:
         for i, channel in enumerate(channels):
             hist = np.histogram(channel, bins=self.bins_per_channel, range=ranges[i])[0]
             hist = hist.astype(np.float32)
-            hist /= hist.sum() + 1e-8  # Normalize histogram
+            if self.normalize_histograms:
+                hist /= hist.sum() + 1e-8  # Normalize histogram
             #Plot the histogram
+            """
             print(f"Histogram Channel {i}: shape={hist.shape}, min={hist.min()}, max={hist.max()}, mean={hist.mean():.2f}, std={hist.std():.2f}")
             plt.figure()
             plt.title(f"Histogram Channel {i}")
@@ -79,6 +83,7 @@ class ImageDescriptor:
             plt.xlabel('Bin')
             plt.ylabel('Frequency')
             plt.show()
+            """
             histograms.append(hist)
             
         descriptor = np.concatenate(histograms)
