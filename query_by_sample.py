@@ -64,7 +64,7 @@ def load_queries(queries_path: str):
 
 
 def add_descriptors_to_dataset(dataset: list[dict[str, Any]]):
-    descriptor_maker = ImageDescriptor()
+    descriptor_maker = ImageDescriptor(normalize_histograms=True)
     for entry in dataset:
         entry['descriptor'] = descriptor_maker.compute_descriptor(entry['image'])
 
@@ -114,10 +114,14 @@ def main():
     print("Computing descriptors..")
     add_descriptors_to_dataset(database)
     add_descriptors_to_dataset(queries)
-    print("Querying...")
-    closest_k = find_k_closests(queries[0], database)
-    print("Showing...")
-    show_results(queries[0], closest_k)
+
+    for query in queries:
+        print("Querying...")
+        closest_k = find_k_closests(query, database)
+        print("Showing...")
+        show_results(query, closest_k)
+
+
 
 
 if __name__ == "__main__":

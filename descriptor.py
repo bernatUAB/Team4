@@ -9,7 +9,7 @@ class ImageDescriptor:
     
     ''' Class to compute descriptors using 1D histograms'''
 
-    def __init__(self, color_mapping=None, color_space='HSV', bins_per_channel = 32, normalize_histograms=False):
+    def __init__(self, color_mapping=None, color_space='RGB', bins_per_channel = 16, normalize_histograms=False):
         self.color_mapping = color_mapping
         self.color_space = color_space.upper() # 'RGB', 'HSV', 'LAB', 'GRAY', 'YCrCb', 'Cielab'
         self.bins_per_channel = bins_per_channel
@@ -68,6 +68,12 @@ class ImageDescriptor:
             for i, ch in enumerate(channels):
                 print(f"Channel {i}: dtype={ch.dtype}, shape={ch.shape}, min={ch.min():.4f}, max={ch.max():.4f}, mean={ch.mean():.4f}, std={ch.std():.4f}")
         
+        """
+        plt.figure()
+        plt.title(f"Image")
+        plt.imshow(image)
+        plt.show()
+        """
         histograms = []
         for i, channel in enumerate(channels):
             hist = np.histogram(channel, bins=self.bins_per_channel, range=ranges[i])[0]
