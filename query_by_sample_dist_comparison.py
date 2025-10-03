@@ -151,7 +151,7 @@ def main():
     parser.add_argument("--bins_per_channel", type=int, default=32)
     parser.add_argument("--color_space", type=str, default="HSV")
     parser.add_argument("--test", action="store_true", help="Run with a range of bins and color spaces")
-    parser.add_argument("--output_file", type=str, default="results.csv", help="Path to save the results CSV file")
+    parser.add_argument("--output_file", type=str, default="results1.csv", help="Path to save the results CSV file")
     args = parser.parse_args()
 
     database = load_database(args.dataset_path)
@@ -170,7 +170,7 @@ def main():
         csv_writer.writerow(["Color Space", "Bins per Channel", "Distance Function", f"mAP@{args.top_k}"])
 
         if args.test:
-            bins_per_channel_to_test = [32, 64, 128, 255]
+            bins_per_channel_to_test = [16, 32, 64, 128, 255]
             color_spaces_to_test = ["GRAY", "HSV", "RGB", "LAB", "YCRCB", "HLS"]
 
             for bins in bins_per_channel_to_test:
