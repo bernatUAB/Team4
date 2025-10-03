@@ -25,8 +25,11 @@ def hellinger_similarity(h1, h2):
     return np.sum(np.sqrt(h1*h2))
 
 def kl_divergence(h1, h2):
-    return sum(h1[i] * np.log(h1[i]/h2[i]) for i in range(len(h1)))
-
+    epsilon = 1e-10
+    h1 = h1 + epsilon
+    h2 = h2 + epsilon
+    
+    return np.sum(h1 * np.log(h1 / h2))
 def jensen_shannon_divergence(h1, h2):
     # https://medium.com/data-science/how-to-understand-and-use-jensen-shannon-divergence-b10e11b03fd6
     m = 0.5 * (h1 + h2)
@@ -39,10 +42,22 @@ def earth_movers_distance(h1, h2, bin_locations):
 
     return scipy.stats.wasserstein_distance(bin_locations, bin_locations, h1, h2) # SCIPY IMPLEMENTATION
 
+def get_similarity_matrix(h1, h2):
 
-def quadratic_form_distance(h1, h2,A):
+    num_bins = len(h1)
+
+    similarity_matrix = np.zeros((num_bins, num_bins))
+
+    for i in range(num_bins):
+        for j in range(num_bins):
+            similarity_matrix[i, j] = min(h1[i], h2[j])
+
+    return similarity_matrix
+
+def quadratic_form_distance(h1, h2):
     # h1, h2: Histograms to compare
     # A: Similarity matrix
+    A = get_similarity_matrix(h1, h2)
     diff = h1 - h2
     return np.sqrt(diff.T @ A @ diff)
 
